@@ -61,12 +61,7 @@ func (c *Command) execute(msg *discordgo.MessageCreate, args ...Argument) {
 }
 
 func (c *Command) AddSubCommand(command *Command) *Command {
-	for _, alias := range command.Aliases {
-		if _, exists := c.SubCommands[alias]; exists {
-			continue
-		}
-		c.SubCommands[alias] = command
-	}
+	AddCommandToMap(command, c.SubCommands)
 	return c
 }
 

@@ -88,11 +88,6 @@ func (r *Router) GetMentions() []string {
 }
 
 func (r *Router) AddCommand(command *Command) *Router {
-	for _, alias := range command.Aliases {
-		if _, exists := r.Commands[alias]; exists {
-			continue
-		}
-		r.Commands[alias] = command
-	}
+	AddCommandToMap(command, r.Commands)
 	return r
 }
