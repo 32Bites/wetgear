@@ -76,7 +76,7 @@ func GetMentionType(content string) MentionType {
 
 // GetMention tries to make a Mention out of a string. Upon failure, return nil.
 func GetMention(content string) *Mention {
-	regex := *new(*regexp.Regexp)
+	var regex *regexp.Regexp
 
 	if MentionUserRegex.MatchString(content) {
 		regex = MentionUserRegex
