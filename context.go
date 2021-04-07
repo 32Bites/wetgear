@@ -9,7 +9,7 @@ import (
 type Context struct {
 	MessageCreate *discordgo.MessageCreate
 	Command       *Command
-	Alias string
+	Alias         string
 	Arguments     []Argument
 }
 
