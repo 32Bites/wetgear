@@ -35,7 +35,7 @@ func main() {
 	ping := wetgear.NewCommand(router).AddAliases("ping").SetExecutor(func(ctx wetgear.Context) {
 		ctx.GetSession().ChannelMessageSend(ctx.MessageCreate.ChannelID, "Pong!")
 	})
-	pong := wetgear.NewCommand(router).AddAliases("pong").SetExecutor(func (ctx wetgear.Context) {
+	pong := wetgear.NewCommand(router).AddAliases("pong").SetExecutor(func(ctx wetgear.Context) {
 		ctx.GetSession().ChannelMessageSend(ctx.MessageCreate.ChannelID, ":ping_pong:")
 	})
 	ping.AddSubCommand(pong)

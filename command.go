@@ -13,8 +13,8 @@ type Command struct {
 	Aliases     []string
 	Name        string
 	// IgnoreCase  bool
-	Router   *Router
-	Session  *discordgo.Session
+	Router          *Router
+	Session         *discordgo.Session
 	CommandExecutor CommandExecutor
 }
 
@@ -27,8 +27,8 @@ func NewCommand(router *Router) *Command {
 	}
 
 	return &Command{
-		Router: router,
-		Session: router.Session,
+		Router:      router,
+		Session:     router.Session,
 		SubCommands: map[string]*Command{},
 	}
 }
@@ -56,7 +56,7 @@ func (c *Command) execute(msg *discordgo.MessageCreate, args ...Argument) {
 		MessageCreate: msg,
 		Command:       c,
 		Arguments:     args[1:],
-		Alias: args[0].Raw(),
+		Alias:         args[0].Raw(),
 	})
 }
 
