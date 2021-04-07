@@ -27,7 +27,7 @@ func (a Argument) Quoted() bool {
 
 // ParseArguments takes in an input string and parses out valid arguments for use in commands
 func ParseArguments(content string) []Argument {
-	if len(content) == 0 {
+	if content == "" {
 		return nil
 	}
 
