@@ -5,6 +5,7 @@ import (
 )
 
 type CommandExecutor func(ctx Context)
+type CommandMiddleware func(exe CommandExecutor) CommandExecutor
 
 // Command represents a discord command.
 type Command struct {
@@ -13,9 +14,11 @@ type Command struct {
 	Aliases     []string
 	Name        string
 	// IgnoreCase  bool
-	Router          *Router
-	Session         *discordgo.Session
-	CommandExecutor CommandExecutor
+	Router              *Router
+	Session             *discordgo.Session
+	CommandExecutor     CommandExecutor
+	Middlwares          []CommandMiddleware
+	RequiredPermissions *int64 // Use CombinePermissions to use multiple
 }
 
 func NewCommand(router *Router) *Command {
@@ -45,14 +48,38 @@ func (c *Command) execute(msg *discordgo.MessageCreate, args ...Argument) {
 		}
 	}
 
-	// To avoid crashes
-	if c.CommandExecutor == nil {
-		c.CommandExecutor = func(ctx Context) {
-			Logger.Printf("Command being executed \"%s\" has no CommandExecutor.\nPlease use the SetExecutor method to override this message.\n", ctx.MessageCreate.Content)
+	// Check Permissions
+	if c.RequiredPermissions != nil {
+		if msg.Member != nil {
+			if perm, err := c.Session.State.MessagePermissions(msg.Message); err != nil {
+				return
+			} else {
+				if (perm & *c.RequiredPermissions) < 0 {
+					return
+				}
+			}
 		}
 	}
 
-	c.CommandExecutor(Context{
+	// To avoid crashes
+	if c.CommandExecutor == nil {
+		c.CommandExecutor = func(ctx Context) {
+			Logger.Printf("Command being executed \"%s\" has no CommandExecutor. Please use the SetExecutor method to override this message.\n", ctx.MessageCreate.Content)
+		}
+	}
+
+	// Apply middlewares
+	exec := c.CommandExecutor
+	// Global
+	for _, middleware := range c.Router.GlobalMiddlwares {
+		exec = middleware(exec)
+	}
+	// Local
+	for _, middlware := range c.Middlwares {
+		exec = middlware(exec)
+	}
+
+	exec(Context{
 		MessageCreate: msg,
 		Command:       c,
 		Arguments:     args[1:],
@@ -82,5 +109,15 @@ func (c *Command) SetDescription(description string) *Command {
 
 func (c *Command) AddAliases(aliases ...string) *Command {
 	c.Aliases = append(c.Aliases, aliases...)
+	return c
+}
+
+func (c *Command) AddMiddlewares(middlewares ...CommandMiddleware) *Command {
+	for _, middleware := range middlewares {
+		if middleware == nil {
+			continue
+		}
+		c.Middlwares = append(c.Middlwares, middleware)
+	}
 	return c
 }

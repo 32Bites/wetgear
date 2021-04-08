@@ -21,10 +21,11 @@ type PrefixSettings struct {
 
 // Router is a command router
 type Router struct {
-	Session        *discordgo.Session
-	Commands       map[string]*Command
-	PrefixSettings PrefixSettings
-	BotsAllowed    bool
+	Session          *discordgo.Session
+	Commands         map[string]*Command
+	PrefixSettings   PrefixSettings
+	BotsAllowed      bool
+	GlobalMiddlwares []CommandMiddleware
 }
 
 // NewRouter creates a *Router and configures a *discordgo.Session to work with the command system

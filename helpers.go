@@ -19,9 +19,17 @@ func ChannelMessageSendEmbedReply(session *discordgo.Session, channelID string, 
 	if session == nil {
 		return nil, errors.New("session is nil")
 	}
-	
+
 	return session.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
 		Reference: reference,
-		Embed: embed,
+		Embed:     embed,
 	})
+}
+
+func CombinePermissions(perms ...int) int {
+	perm := 0
+	for _, prm := range perms {
+		perm = perm | prm
+	}
+	return perm
 }
