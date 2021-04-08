@@ -14,12 +14,12 @@ const (
 	MentionCustomEmojiAnimated MentionType = 5
 )
 
-var MentionUserRegex = regexp.MustCompile(`^<@(?P<Identifier>\d+)>$`)
-var MentionUserNicknameRegex = regexp.MustCompile(`^<@!(?P<Identifier>\d+})>$`)
-var MentionChannelRegex = regexp.MustCompile(`^<#(?P<Identifier>\d+)>$`)
-var MentionRoleRegex = regexp.MustCompile(`^<@&(?P<Identifier>\d+)>$`)
-var MentionCustomEmojiRegex = regexp.MustCompile(`^<:(?P<EmojiName>\w+):(?P<Identifier>\d+)>$`)
-var MentionCustomEmojiAnimatedRegex = regexp.MustCompile(`^<a:(?P<EmojiName>\w+):(?P<Identifier>\d+)>$`)
+var MentionUserRegex = regexp.MustCompile(`<@(?P<Identifier>\d+)>`)
+var MentionUserNicknameRegex = regexp.MustCompile(`<@!(?P<Identifier>\d+)>`)
+var MentionChannelRegex = regexp.MustCompile(`<#(?P<Identifier>\d+)>`)
+var MentionRoleRegex = regexp.MustCompile(`<@&(?P<Identifier>\d+)>`)
+var MentionCustomEmojiRegex = regexp.MustCompile(`<:(?P<EmojiName>\w+):(?P<Identifier>\d+)>`)
+var MentionCustomEmojiAnimatedRegex = regexp.MustCompile(`<a:(?P<EmojiName>\w+):(?P<Identifier>\d+)>`)
 
 // MentionType describes mention types
 type MentionType int
