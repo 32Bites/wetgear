@@ -26,6 +26,7 @@ type Router struct {
 	PrefixSettings   PrefixSettings
 	BotsAllowed      bool
 	GlobalMiddlwares []CommandMiddleware
+	RemoveHandler    func()
 }
 
 // NewRouter creates a *Router and configures a *discordgo.Session to work with the command system
@@ -38,7 +39,7 @@ func NewRouter(session *discordgo.Session, baseRouter *Router) (*Router, error) 
 	}
 	baseRouter.Session = session
 
-	session.AddHandler(func(session *discordgo.Session, msg *discordgo.MessageCreate) {
+	remove := session.AddHandler(func(session *discordgo.Session, msg *discordgo.MessageCreate) {
 		// Check if bot and if bots are allowed, and make sure that the message is not empty
 		if (msg.Author.Bot && !baseRouter.BotsAllowed) || msg.Content == "" {
 			return
@@ -81,6 +82,7 @@ func NewRouter(session *discordgo.Session, baseRouter *Router) (*Router, error) 
 			}
 		}
 	})
+	baseRouter.RemoveHandler = remove
 	return baseRouter, nil
 }
 
