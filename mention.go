@@ -57,47 +57,44 @@ func IsMention(content string) bool {
 
 // GetMentionType attempts to get the MentionType of a string, upon failure returns -1 as a MentionType
 func GetMentionType(content string) MentionType {
-	if MentionUserRegex.MatchString(content) {
-		return MentionUser
-	} else if MentionUserNicknameRegex.MatchString(content) {
-		return MentionUserNickname
-	} else if MentionChannelRegex.MatchString(content) {
-		return MentionChannel
-	} else if MentionRoleRegex.MatchString(content) {
-		return MentionRole
-	} else if MentionCustomEmojiRegex.MatchString(content) {
-		return MentionCustomEmoji
-	} else if MentionCustomEmojiAnimatedRegex.MatchString(content) {
-		return MentionCustomEmojiAnimated
-	} else {
-		return -1
+	mentions := []struct {
+		Regex       *regexp.Regexp
+		MentionType MentionType
+	}{
+		{MentionUserRegex, MentionUser},
+		{MentionUserNicknameRegex, MentionUserNickname},
+		{MentionChannelRegex, MentionChannel},
+		{MentionRoleRegex, MentionRole},
+		{MentionCustomEmojiRegex, MentionCustomEmoji},
+		{MentionCustomEmojiAnimatedRegex, MentionCustomEmojiAnimated},
 	}
+
+	for _, mention := range mentions {
+		if mention.Regex.MatchString(content) {
+			return mention.MentionType
+		}
+	}
+
+	return -1
 }
 
 // GetMention tries to make a Mention out of a string. Upon failure, return nil.
 func GetMention(content string) *Mention {
-	var regex *regexp.Regexp
+	regexps := []*regexp.Regexp{MentionUserRegex, MentionUserNicknameRegex, MentionChannelRegex, MentionRoleRegex, MentionCustomEmojiRegex, MentionCustomEmojiAnimatedRegex}
 
-	if MentionUserRegex.MatchString(content) {
-		regex = MentionUserRegex
-	} else if MentionUserNicknameRegex.MatchString(content) {
-		regex = MentionUserNicknameRegex
-	} else if MentionChannelRegex.MatchString(content) {
-		regex = MentionChannelRegex
-	} else if MentionRoleRegex.MatchString(content) {
-		regex = MentionRoleRegex
-	} else if MentionCustomEmojiRegex.MatchString(content) {
-		regex = MentionCustomEmojiRegex
-	} else if MentionCustomEmojiAnimatedRegex.MatchString(content) {
-		regex = MentionCustomEmojiAnimatedRegex
-	} else {
-		return nil
+	regexp := new(regexp.Regexp)
+
+	for _, r := range regexps {
+		if r.MatchString(content) {
+			regexp = r
+		}
 	}
+
 	id := ""
 	emojiName := ""
 
-	matches := regex.FindStringSubmatch(content)
-	names := regex.SubexpNames()
+	matches := regexp.FindStringSubmatch(content)
+	names := regexp.SubexpNames()
 
 	for i, match := range matches {
 		if i != 0 {
