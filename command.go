@@ -18,7 +18,7 @@ type Command struct {
 	Session             *discordgo.Session
 	CommandExecutor     CommandExecutor
 	Middlwares          []CommandMiddleware
-	RequiredPermissions *int64 // Use CombinePermissions to use multiple
+	RequiredPermissions int64 // Use CombinePermissions to use multiple
 }
 
 func NewCommand(router *Router) *Command {
@@ -49,12 +49,12 @@ func (c *Command) execute(msg *discordgo.MessageCreate, args ...Argument) {
 	}
 
 	// Check Permissions
-	if c.RequiredPermissions != nil {
+	if c.RequiredPermissions != 0 {
 		if msg.Member != nil {
 			if perm, err := c.Session.State.MessagePermissions(msg.Message); err != nil {
 				return
 			} else {
-				if (perm & *c.RequiredPermissions) < 0 {
+				if (perm & c.RequiredPermissions) < 0 {
 					return
 				}
 			}
