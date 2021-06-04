@@ -15,3 +15,4 @@ This project currently in it's early stages, so be aware that some fundamental c
 - [ ] Write better comments and documentation for use with godoc
 - [ ] Write basic examples
 - [ ] Write unit tests
+- [ ] Add backtick argument parsing, will add when I need it for my bot.
