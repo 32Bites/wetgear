@@ -7,7 +7,8 @@ import (
 	"strings"
 )
 
-var ArgumentRegex = regexp.MustCompile(`[^" \n\r\t]+|"[^"\n\r\t]*"`)
+// Ugly as hell
+var ArgumentRegex = regexp.MustCompile(`[^" \n\r\t` + "`" + `]+|"[^"\n\r\t` + "`" + `]*"`)
 
 type Argument struct {
 	raw    string
