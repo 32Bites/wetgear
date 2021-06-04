@@ -9,11 +9,10 @@ type CommandMiddleware func(exe CommandExecutor) CommandExecutor
 
 // Command represents a discord command.
 type Command struct {
-	Description string
-	SubCommands map[string]*Command
-	Aliases     []string
-	Name        string
-	// IgnoreCase  bool
+	Description         string
+	SubCommands         map[string]*Command
+	Aliases             []string
+	Name                string
 	Router              *Router
 	Session             *discordgo.Session
 	CommandExecutor     CommandExecutor

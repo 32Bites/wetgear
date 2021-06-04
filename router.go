@@ -51,7 +51,7 @@ func NewRouter(session *discordgo.Session, baseRouter *Router) (*Router, error) 
 		if baseRouter.PrefixSettings.HandlePing {
 			for _, mention := range baseRouter.GetMentions() {
 				if strings.HasPrefix(msg.Content, mention+" ") && len(contentRunes) > len([]rune(mention+" ")) {
-					command = strings.Trim(string(contentRunes[len([]rune(mention)):]), " ")
+					command = strings.TrimSpace(string(contentRunes[len([]rune(mention)):]))
 					break
 				}
 			}

@@ -1,7 +1,6 @@
 package wetgear
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -28,7 +27,7 @@ func (a Argument) Quoted() bool {
 }
 
 func (a Argument) SurroundQuotes() string {
-	return fmt.Sprintf(`"%s"`, a.raw)
+	return `"` + a.raw + `"`
 }
 
 // GetInt attempts to parse the argument as a int64. Upon failure, returns nil
