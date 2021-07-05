@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -26,7 +27,11 @@ type Router struct {
 	PrefixSettings   PrefixSettings
 	BotsAllowed      bool
 	GlobalMiddlwares []CommandMiddleware
-	RemoveHandler    func()
+	RemoveHandlers   []func()
+	Paginations      struct {
+		Values map[string]*Pagination
+		sync.RWMutex
+	}
 }
 
 // NewRouter creates a *Router and configures a *discordgo.Session to work with the command system
@@ -37,52 +42,26 @@ func NewRouter(session *discordgo.Session, baseRouter *Router) (*Router, error) 
 	if baseRouter == nil {
 		return nil, errors.New("provided base router is nil")
 	}
+
 	baseRouter.Session = session
+	baseRouter.Commands = map[string]*Command{}
+	baseRouter.Paginations = struct {
+		Values map[string]*Pagination
+		sync.RWMutex
+	}{
+		Values: map[string]*Pagination{},
+	}
 
-	remove := session.AddHandler(func(session *discordgo.Session, msg *discordgo.MessageCreate) {
-		// Check if bot and if bots are allowed, and make sure that the message is not empty
-		if (msg.Author.Bot && !baseRouter.BotsAllowed) || msg.Content == "" {
-			return
-		}
-		contentRunes := []rune(msg.Content)
-		command := ""
+	baseRouter.RemoveHandlers = []func(){session.AddHandler(baseRouter.messageCreateHandler)}
+	baseRouter.RemoveHandlers = append(baseRouter.RemoveHandlers, session.AddHandler(
+		func(session *discordgo.Session, event *discordgo.MessageReactionAdd) {
+			baseRouter.reactionHandler(event.Emoji.Name, event.MessageID, event.UserID)
+		}))
+	baseRouter.RemoveHandlers = append(baseRouter.RemoveHandlers, session.AddHandler(
+		func(session *discordgo.Session, event *discordgo.MessageReactionRemove) {
+			baseRouter.reactionHandler(event.Emoji.Name, event.MessageID, event.UserID)
+		}))
 
-		// Check if the message starts with a mention, and that the message is longer than the mention
-		if baseRouter.PrefixSettings.HandlePing {
-			for _, mention := range baseRouter.GetMentions() {
-				if strings.HasPrefix(msg.Content, mention+" ") && len(contentRunes) > len([]rune(mention+" ")) {
-					command = strings.TrimSpace(string(contentRunes[len([]rune(mention)):]))
-					break
-				}
-			}
-		}
-
-		// If it is not a mention command
-		if command == "" {
-			for _, prefix := range baseRouter.PrefixSettings.Prefixes {
-				content := msg.Content
-				if baseRouter.PrefixSettings.IgnoreCase {
-					content = strings.ToUpper(content)
-					prefix = strings.ToUpper(prefix)
-				}
-
-				if strings.HasPrefix(content, prefix) {
-					command = strings.Trim(string(contentRunes[len([]rune(prefix)):]), " ")
-					break
-				}
-			}
-		}
-
-		args := ParseArguments(command)
-		if len(args) > 0 {
-			if cmd, exists := baseRouter.Commands[args[0].Raw()]; exists {
-				if cmd != nil {
-					cmd.execute(msg, args...)
-				}
-			}
-		}
-	})
-	baseRouter.RemoveHandler = remove
 	return baseRouter, nil
 }
 
@@ -93,4 +72,81 @@ func (r *Router) GetMentions() []string {
 func (r *Router) AddCommand(command *Command) *Router {
 	AddCommandToMap(command, r.Commands)
 	return r
+}
+
+func (r *Router) reactionHandler(emoji, messageID, userID string) {
+	r.Paginations.Lock()
+	defer r.Paginations.Unlock()
+	if pagination, exists := r.Paginations.Values[messageID]; exists {
+		var err error
+
+		if !pagination.Done || pagination.AuthorID != userID {
+			return
+		}
+
+		switch emoji {
+		case EmojiFastBackward:
+			err = pagination.Update(0)
+		case EmojiFastForward:
+			err = pagination.Update(uint(len(pagination.Embeds) - 1))
+		case EmojiBackwardArrow:
+			newIndex := int(pagination.Current) - 1
+			if newIndex <= len(pagination.Embeds)-1 && newIndex >= 0 {
+				pagination.Update(uint(newIndex))
+			}
+		case EmojiForwardArrow:
+			newIndex := int(pagination.Current) + 1
+			if newIndex <= len(pagination.Embeds)-1 {
+				pagination.Update(uint(newIndex))
+			}
+		}
+
+		if err != nil {
+			Logger.Println("An error occurred in reactionHandler:", err.Error())
+		}
+	}
+}
+
+func (r *Router) messageCreateHandler(session *discordgo.Session, event *discordgo.MessageCreate) {
+	// Check if bot and if bots are allowed, and make sure that the message is not empty
+	if (event.Author.Bot && !r.BotsAllowed) || event.Content == "" {
+		return
+	}
+	contentRunes := []rune(event.Content)
+	command := ""
+
+	// Check if the message starts with a mention, and that the message is longer than the mention
+	if r.PrefixSettings.HandlePing {
+		for _, mention := range r.GetMentions() {
+			if strings.HasPrefix(event.Content, mention+" ") && len(contentRunes) > len([]rune(mention+" ")) {
+				command = strings.TrimSpace(string(contentRunes[len([]rune(mention)):]))
+				break
+			}
+		}
+	}
+
+	// If it is not a mention command
+	if command == "" {
+		for _, prefix := range r.PrefixSettings.Prefixes {
+			content := event.Content
+			if r.PrefixSettings.IgnoreCase {
+				content = strings.ToUpper(content)
+				prefix = strings.ToUpper(prefix)
+			}
+
+			if strings.HasPrefix(content, prefix) {
+				command = strings.Trim(string(contentRunes[len([]rune(prefix)):]), " ")
+				break
+			}
+		}
+	}
+
+	args := ParseArguments(command)
+	if len(args) > 0 {
+		if cmd, exists := r.Commands[args[0].Raw()]; exists {
+			if cmd != nil {
+				cmd.execute(event, args...)
+			}
+		}
+	}
 }

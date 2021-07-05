@@ -24,7 +24,6 @@ func main() {
 			HandlePing: true,
 		},
 		BotsAllowed: true,
-		Commands:    map[string]*wetgear.Command{},
 	}
 
 	router, err = wetgear.NewRouter(sess, router)
@@ -33,7 +32,12 @@ func main() {
 	}
 
 	ping := wetgear.NewCommand(router).AddAliases("ping").SetExecutor(func(ctx wetgear.Context) {
-		ctx.GetSession().ChannelMessageSend(ctx.MessageCreate.ChannelID, "Pong!")
+		fmt.Println(ctx.MessageCreate.Author.ID)
+		ctx.Command.Router.CreatePagination(ctx.MessageCreate.ChannelID, ctx.MessageCreate.Author.ID).AddEmbeds(
+			wetgear.EmbedToPage(&discordgo.MessageEmbed{Description: "Page 1"}),
+			wetgear.EmbedToPage(&discordgo.MessageEmbed{Description: "Page 2"}),
+			wetgear.EmbedToPage(&discordgo.MessageEmbed{Description: "Page 3"}),
+		).Spawn()
 	})
 	pong := wetgear.NewCommand(router).AddAliases("pong").SetExecutor(func(ctx wetgear.Context) {
 		ctx.GetSession().ChannelMessageSend(ctx.MessageCreate.ChannelID, ":ping_pong:")

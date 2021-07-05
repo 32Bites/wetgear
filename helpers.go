@@ -57,6 +57,12 @@ func ChannelMessageSendEmbedReply(session *discordgo.Session, channelID string, 
 	})
 }
 
+func EmbedToPage(embed *discordgo.MessageEmbed) PaginationPage {
+	return func() *discordgo.MessageEmbed {
+		return embed
+	}
+}
+
 func CombinePermissions(perms ...int) int {
 	perm := 0
 	for _, prm := range perms {
