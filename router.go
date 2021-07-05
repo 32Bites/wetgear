@@ -53,14 +53,11 @@ func NewRouter(session *discordgo.Session, baseRouter *Router) (*Router, error) 
 	}
 
 	baseRouter.RemoveHandlers = []func(){session.AddHandler(baseRouter.messageCreateHandler)}
-	baseRouter.RemoveHandlers = append(baseRouter.RemoveHandlers, session.AddHandler(
-		func(session *discordgo.Session, event *discordgo.MessageReactionAdd) {
-			baseRouter.reactionHandler(event.Emoji.Name, event.MessageID, event.UserID)
-		}))
-	baseRouter.RemoveHandlers = append(baseRouter.RemoveHandlers, session.AddHandler(
-		func(session *discordgo.Session, event *discordgo.MessageReactionRemove) {
-			baseRouter.reactionHandler(event.Emoji.Name, event.MessageID, event.UserID)
-		}))
+	baseRouter.RemoveHandlers = append(baseRouter.RemoveHandlers, session.AddHandler(func(session *discordgo.Session, event *discordgo.MessageReactionAdd) {
+		baseRouter.reactionHandler(event.Emoji.Name, event.MessageID, event.UserID)
+	}), session.AddHandler(func(session *discordgo.Session, event *discordgo.MessageReactionRemove) {
+		baseRouter.reactionHandler(event.Emoji.Name, event.MessageID, event.UserID)
+	}))
 
 	return baseRouter, nil
 }
