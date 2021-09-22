@@ -23,6 +23,9 @@ func main() {
 			IgnoreCase: true,
 			HandlePing: true,
 		},
+		HelpSettings: wetgear.HelpSettings{
+			Enabled: true,
+		}, // Will use Default aliases.
 		BotsAllowed: true,
 	}
 
@@ -31,14 +34,19 @@ func main() {
 		panic(err)
 	}
 
-	ping := wetgear.NewCommand(router).AddAliases("ping").SetExecutor(func(ctx wetgear.Context) {
-		fmt.Println(ctx.MessageCreate.Author.ID)
-		ctx.Command.Router.CreatePagination(ctx.MessageCreate.ChannelID, ctx.MessageCreate.Author.ID).AddEmbeds(
-			wetgear.EmbedToPage(&discordgo.MessageEmbed{Description: "Page 1"}),
-			wetgear.EmbedToPage(&discordgo.MessageEmbed{Description: "Page 2"}),
-			wetgear.EmbedToPage(&discordgo.MessageEmbed{Description: "Page 3"}),
-		).Spawn()
-	})
+	ping := wetgear.
+		NewCommand(router).
+		AddAliases("ping").
+		SetName("Ping").
+		SetDescription("Creates some embeds").
+		SetExecutor(func(ctx wetgear.Context) {
+			fmt.Println(ctx.MessageCreate.Author.ID)
+			ctx.Command.Router.CreatePagination(ctx.MessageCreate.ChannelID, ctx.MessageCreate.Author.ID).AddEmbeds(
+				wetgear.EmbedToPage(&discordgo.MessageEmbed{Description: "Page 1"}),
+				wetgear.EmbedToPage(&discordgo.MessageEmbed{Description: "Page 2"}),
+				wetgear.EmbedToPage(&discordgo.MessageEmbed{Description: "Page 3"}),
+			).Spawn()
+		})
 	pong := wetgear.NewCommand(router).AddAliases("pong").SetExecutor(func(ctx wetgear.Context) {
 		ctx.GetSession().ChannelMessageSend(ctx.MessageCreate.ChannelID, ":ping_pong:")
 	})

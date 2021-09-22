@@ -37,7 +37,11 @@ const (
 	ColorChocolate       = 0xD2691E
 )
 
-func AddCommandToMap(command *Command, commandMap map[string]*Command) {
+func addCommandToMap(command *Command, commandMap map[string]*Command) {
+	if command == nil {
+		return
+	}
+
 	for _, alias := range command.Aliases {
 		if _, exists := commandMap[alias]; exists {
 			continue

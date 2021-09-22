@@ -1,6 +1,8 @@
 package wetgear
 
 import (
+	"math/rand"
+
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -87,7 +89,7 @@ func (c *Command) execute(msg *discordgo.MessageCreate, args ...Argument) {
 }
 
 func (c *Command) AddSubCommand(command *Command) *Command {
-	AddCommandToMap(command, c.SubCommands)
+	addCommandToMap(command, c.SubCommands)
 	return c
 }
 
@@ -107,6 +109,18 @@ func (c *Command) SetDescription(description string) *Command {
 }
 
 func (c *Command) AddAliases(aliases ...string) *Command {
+	if len(aliases) == 0 {
+		aliases = []string{
+			func() string {
+				alias := ""
+				charSet := []rune{'a', 'b'}
+				for i := 0; i < 10; i++ {
+					alias += string(charSet[rand.Intn(len(charSet))])
+				}
+				return alias
+			}(),
+		}
+	}
 	c.Aliases = append(c.Aliases, aliases...)
 	return c
 }

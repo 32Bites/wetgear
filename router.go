@@ -20,6 +20,14 @@ type PrefixSettings struct {
 	HandlePing bool // whether or not to treat a ping as a command prefix. Example: "@BotName help" does the same thing as "!help" if "!" is a prefix.
 }
 
+// HelpSettings defines the settings for the router's built-in help command.
+type HelpSettings struct {
+	Enabled          bool
+	NotFoundExecutor CommandNotFoundExecutor
+	FoundExecutor    CommandFoundExecutor
+	Aliases          []string
+}
+
 // Router is a command router
 type Router struct {
 	Session          *discordgo.Session
@@ -28,6 +36,7 @@ type Router struct {
 	BotsAllowed      bool
 	GlobalMiddlwares []CommandMiddleware
 	RemoveHandlers   []func()
+	HelpSettings     HelpSettings
 	Paginations      struct {
 		Values map[string]*Pagination
 		sync.RWMutex
@@ -59,6 +68,17 @@ func NewRouter(session *discordgo.Session, baseRouter *Router) (*Router, error) 
 		baseRouter.reactionHandler(event.Emoji.Name, event.MessageID, event.UserID)
 	}))
 
+	if baseRouter.HelpSettings.Enabled {
+		if len(baseRouter.HelpSettings.Aliases) == 0 {
+			baseRouter.HelpSettings.Aliases = []string{"help", "h"}
+		}
+		helpCommand := NewCommand(baseRouter).AddAliases(baseRouter.HelpSettings.Aliases...).
+			SetName("Help").
+			SetDescription("Provides Help Information for a command.").
+			SetExecutor(helpExecutor)
+		baseRouter.AddCommand(helpCommand)
+	}
+
 	return baseRouter, nil
 }
 
@@ -67,7 +87,7 @@ func (r *Router) GetMentions() []string {
 }
 
 func (r *Router) AddCommand(command *Command) *Router {
-	AddCommandToMap(command, r.Commands)
+	addCommandToMap(command, r.Commands)
 	return r
 }
 
