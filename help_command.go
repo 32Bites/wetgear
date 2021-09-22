@@ -25,25 +25,36 @@ func DefaultCommandNotFound(parentCommand *Command, commandName string) CommandE
 func DefaultCommandFound(command *Command) CommandExecutor {
 	return func(ctx Context) {
 		if session := ctx.GetSession(); session != nil {
-			name := command.Name
-			if name == "" {
-				name = command.Aliases[0]
-			}
+			name := "Commands"
+			description := "Here are the commands."
+			aliases := ""
 
-			description := "```\n" + command.Description + "\n```"
-			if command.Description == "" {
-				description = ""
+			subCommandsOrig := ctx.Command.Router.Commands
+
+			if command != nil {
+				name = command.Name
+				if name == "" {
+					name = command.Aliases[0]
+				}
+				if command.Description == "" {
+					description = ""
+				} else {
+					description = "```\n" + command.Description + "\n```"
+				}
+				aliases = strings.Join(command.Aliases, " ")
+
+				subCommandsOrig = command.SubCommands
 			}
 
 			subCommands := ""
-			for name := range command.SubCommands {
+			for name := range subCommandsOrig {
 				subCommands += name + " "
 			}
 
 			message := fmt.Sprintf("Name: %s\nDescription: %s\nAliases: %s\nSub Commands: %s\n",
 				name,
 				description,
-				strings.Join(command.Aliases, " "),
+				aliases,
 				subCommands)
 			session.ChannelMessageSendReply(ctx.MessageCreate.ChannelID, message, ctx.MessageCreate.Reference())
 		}
@@ -53,6 +64,7 @@ func DefaultCommandFound(command *Command) CommandExecutor {
 func helpExecutor(ctx Context) {
 	if session := ctx.GetSession(); session != nil {
 		if len(ctx.Arguments) == 0 {
+			ctx.Command.Router.HelpSettings.FoundExecutor(nil)(ctx)
 			return
 		}
 		var currentCommand *Command = nil
@@ -66,17 +78,9 @@ func helpExecutor(ctx Context) {
 			if command, exists := commandMap[arg.Raw()]; exists {
 				currentCommand = command
 			} else {
-				if ctx.Command.Router.HelpSettings.NotFoundExecutor == nil {
-					ctx.Command.Router.HelpSettings.NotFoundExecutor = DefaultCommandNotFound
-				}
-
 				ctx.Command.Router.HelpSettings.NotFoundExecutor(currentCommand, arg.Raw())(ctx)
 				return
 			}
-		}
-
-		if ctx.Command.Router.HelpSettings.FoundExecutor == nil {
-			ctx.Command.Router.HelpSettings.FoundExecutor = DefaultCommandFound
 		}
 
 		ctx.Command.Router.HelpSettings.FoundExecutor(currentCommand)(ctx)

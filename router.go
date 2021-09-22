@@ -72,6 +72,12 @@ func NewRouter(session *discordgo.Session, baseRouter *Router) (*Router, error) 
 		if len(baseRouter.HelpSettings.Aliases) == 0 {
 			baseRouter.HelpSettings.Aliases = []string{"help", "h"}
 		}
+		if baseRouter.HelpSettings.FoundExecutor == nil {
+			baseRouter.HelpSettings.FoundExecutor = DefaultCommandFound
+		}
+		if baseRouter.HelpSettings.NotFoundExecutor == nil {
+			baseRouter.HelpSettings.NotFoundExecutor = DefaultCommandNotFound
+		}
 		helpCommand := NewCommand(baseRouter).AddAliases(baseRouter.HelpSettings.Aliases...).
 			SetName("Help").
 			SetDescription("Provides Help Information for a command.").
