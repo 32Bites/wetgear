@@ -1,5 +1,4 @@
-# wetgear
-Need a command router for discordgo? wetgear is framework for routing, and parsing discordgo messages to commands
+![Logo](logo.png)
 
 ## Why the name?
 wetgear kinda sounds like netgear, the company that manufactured most of my home routers, and well since this is a router, just a different kind, I figured that it was a clever name.
